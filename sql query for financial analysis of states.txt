@@ -1,0 +1,98 @@
+use project1;
+create view agg_expendtr
+as
+(
+select a.State, ( a.[1980-81]+ a.[1981-82] +a.[1982-83]+a.[1983-84]+a.[1984-85] )as '1980_84',
+(a.[1985-86]+a.[1986-87]+a.[1987-88]+a.[1988-89]+a.[1989-90])as '1985_89' ,
+(a.[1990-91]+a.[1991-92]+a.[1992-93]+a.[1993-94]+a.[1994-95])as '1990_94' ,
+(a.[1995-96]+a.[1996-97]+a.[1997-98]+a.[1998-99]+a.[1999-00])as '1995_99' ,
+(a.[2000-01]+a.[2001-02]+a.[2002-03]+a.[2003-04]+a.[2004-05])as '2000_04' ,
+(a.[2005-06]+a.[2006-07]+a.[2007-08]+a.[2008-09]+a.[2009-10])as '2005_9' ,
+(a.[2010-11]+a.[2011-12]+a.[2012-13]+a.[2013-14]+a.[2014-15 (RE)])as '2010_14' ,
+(a.[2015-16 (BE)])as '2015_16'
+from Aggregate_Expenditure as a)
+------------------------------------------------------
+select*from agg_expendtr
+
+
+
+create view capital_expendtr
+as
+(
+select a.State, ( a.[1980-81]+ a.[1981-82] +a.[1982-83]+a.[1983-84]+a.[1984-85] )as '1980_84',
+(a.[1985-86]+a.[1986-87]+a.[1987-88]+a.[1988-89]+a.[1989-90])as '1985_89' ,
+(a.[1990-91]+a.[1991-92]+a.[1992-93]+a.[1993-94]+a.[1994-95])as '1990_94' ,
+(a.[1995-96]+a.[1996-97]+a.[1997-98]+a.[1998-99]+a.[1999-00])as '1995_99' ,
+(a.[2000-01]+a.[2001-02]+a.[2002-03]+a.[2003-04]+a.[2004-05])as '2000_04' ,
+(a.[2005-06]+a.[2006-07]+a.[2007-08]+a.[2008-09]+a.[2009-10])as '2005_09' ,
+(a.[2010-11]+a.[2011-12]+a.[2012-13]+a.[2013-14]+a.[2014-15 (RE)])as '2010_14' ,
+(a.[2015-16 (BE)])as '2015_16'
+from [dbo].[Capital_Expenditures] as a)
+---------------------------------------
+select*from  capital_expendtr
+select*from gross_fiscl_defict
+select*from nominal_gsdp_seris
+select*from own_tax_revnu
+select*from revenue_defict
+select*from revenue_expendtr
+select*from social_sector_expnditr
+---------------------------------------------------------
+Q1
+select o.state,( o.[1980_84]+ o.[1985_89] +o.[1990_94]+o.[1995_99]+o.[2000_04]+o.[2005_09]+o.[2010_14]+o.[2015_16])/8 as avg_tax_revenue ,
+  ( n.[1980_84]+ n.[1985_89] +n.[1990_94]+n.[1995_99]+n.[2000_04]+n.[2005_09]+n.[2010_14]+n.[2015_16])/8 as avg_nominal_gsdp 
+  from own_tax_revnu as o join nominal_gsdp_seris as n
+  on n.state=o.State;
+
+
+    -Q2---Showing correlation between Fiscal Deficits and Capital Expenditure---------------
+
+ select g.state,( g.[1980_84]+ g.[1985_89] +g.[1990_94]+g.[1995_99]+g.[2000_04]+g.[2005_09]+g.[2010_14]+g.[2015_16])/8 as avg_of_fiscal_defict,
+ ( c.[1980_84]+ c.[1985_89] +c.[1990_94]+c.[1995_99]+c.[2000_04]+c.[2005_09]+c.[2010_14]+c.[2015_16])/8 as avg_of_capital_expentr
+ from gross_fiscl_defict  as g join
+ capital_expendtr as c
+ on g.state=c.state;
+ 
+ Q3-- 5 year termly analysis of different Financial Metrics
+select a.State,
+sum(    (a.[1980_84] +a.[1985_89]+a.[1990_94]+a.[1995_99]+a.[2000_04]+a.[2005_09]+a.[2010_14]+a.[2015_16])  /8 )as avg_of_capital_exp,
+sum(    (b.[1980_84] +b.[1985_89]+b.[1990_94]+b.[1995_99]+b.[2000_04]+b.[2005_09]+b.[2010_14]+b.[2015_16])  /8 )as avg_of_tax
+from capital_expendtr as a join own_tax_revnu as b on b.State=a.State
+group by a.State
+
+
+
+-Q4-Correlation between social sector expenditure and tax revenues for different states
+select o.State,   (s.[1980_84] +s.[1985_89]+s.[1990_94]+s.[1995_99]+s.[2000_04]+s.[2005_9]+s.[2010_14]+s.[2015_16])  /8 as avg_of_social,
+  (o.[1980_84] +o.[1985_89]+o.[1990_94]+o.[1995_99]+o.[2000_04]+o.[2005_09]+o.[2010_14]+o.[2015_16])  /8 as avg_of_tax
+from social_sector_expnditr as s join own_tax_revnu as o on o.State=s.state;
+
+
+ -Q7------------- Give at least 2 insights that are not mentioned above and are not clearly visible from the data.
+  -Q7(a)---relation between "tax","gross_gsdp","agregate_expenditure"-------------
+  select o.state,( o.[1980_84]+ o.[1985_89] +o.[1990_94]+o.[1995_99]+o.[2000_04]+o.[2005_09]+o.[2010_14]+o.[2015_16])/8 as avg_tax_revenue,
+  ( n.[1980_84]+ n.[1985_89] +n.[1990_94]+n.[1995_99]+n.[2000_04]+n.[2005_09]+n.[2010_14]+n.[2015_16])/8 as avg_nominal_gsdp ,
+  ( a.[1980_84]+ a.[1985_89] +a.[1990_94]+a.[1995_99]+a.[2000_04]+a.[2005_9]+a.[2010_14]+a.[2015_16])/8 as avg_aggregate_expenditure  
+   from own_tax_revnu as o join nominal_gsdp_seris as n
+   on  n.state=o.State
+   join agg_expendtr as a
+   on a.state=n.state;
+--Q6 Top 10 states with highest gross fiscal deficit
+SELECT Top 10
+a.State,Avg(a.[1980_84]+a.[1985_89]+a.[1990_94]+a.[1995_99]+a.[2000_04]+a.[2010_14]) as Avg_og_GFD 
+FROM gross_fiscl_defict as a
+GROUP BY a.State
+ORDER BY Avg_og_GFD desc
+
+
+
+
+    -Q7(b)-----------tax-aggregate=profit---------
+   select State,(avg_tax_revenue-avg_aggregate_expenditure)as Profit_or_loss ,avg_of_capital_expenditure from
+   ( select o.state,( o.[1980_84]+ o.[1985_89] +o.[1990_94]+o.[1995_99]+o.[2000_04]+o.[2005_09]+o.[2010_14]+o.[2015_16])/8 as avg_tax_revenue,
+   ( a.[1980_84]+ a.[1985_89] +a.[1990_94]+a.[1995_99]+a.[2000_04]+a.[2005_9]+a.[2010_14]+a.[2015_16])/8 as avg_aggregate_expenditure,
+   ( c.[1980_84]+ c.[1985_89] +c.[1990_94]+c.[1995_99]+c.[2000_04]+c.[2005_09]+c.[2010_14]+c.[2015_16])/8 as avg_of_capital_expenditure
+   from own_tax_revnu as o  
+   join agg_expendtr as a
+   on a.state=o.state
+   join  capital_expendtr as c
+   on c.state=o.state )as a;
